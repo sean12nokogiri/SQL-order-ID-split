@@ -1,0 +1,81 @@
+with a as
+(
+select ad, split_part(other_data,'~', 1)as Data -- see if I can replace the %20 things with space
+FROM 		marina_bay_sands_datatransfer_activity
+-- the All | MBS | Prospecting | FY2019 | F3D_RM-PT-HOT and All | MBS | Prospecting | FY2019 | F3D_RM-PT-HOT always on are the same. also All | MBS | Retargeting | FY2019 | F3D_RM-RT-HOT and All | MBS | Retargeting | FY2019 | F3D_RM-RT-HOT alwayson are the same
+join marina_bay_sands_datatransfer_ads on marina_bay_sands_datatransfer_ads.ad_id=marina_bay_sands_datatransfer_activity.ad_id --you need to change this to creative, as this includes trip advisor and whatnot
+where --(other_data like '%u3=confirm%' or other_data like '%u3=saleconf%' or other_data like '%u3=globalstore_checkout_success%')
+--and 
+marina_bay_sands_datatransfer_activity.dated = {{days_ago 4}} and ad_comments not like '%Deactivated%' and ad like '%Connected%' and (other_data like '%u58%' or other_data like '%estaurant%')
+group by 1,2),
+
+b as
+(select split_to_map(Data,';','=') map, ad
+from a 
+group by 1,2) --something about using the delimitors, and printing them to the arrays
+
+select ad,
+element_at(map,'u1') as _Tealium_ID,
+    element_at(map,'u2') as _language_code,
+    element_at(map,'u3') as _domain_pathname,
+element_at(map,'u4') as _page_type,
+element_at(map,'u5') as _page_name,
+element_at(map,'u6') as _page_category,
+element_at(map,'u7') as _page_sub_category,
+element_at(map,'u8') as _Active_device,
+element_at(map,'u9') as _Active_platform,
+element_at(map,'u10') as _Active_browser_type,
+element_at(map,'u11') as _Active_browser_version,
+element_at(map,'u12') as _Active_operating_system,
+element_at(map,'u13') as _URL_of_the_first_page_visited,
+element_at(map,'u14') as _login_status,
+element_at(map,'u15') as _loyalty_tier,
+element_at(map,'u16') as _property_name,
+element_at(map,'u17') as _property_id,
+element_at(map,'u18') as _room_type_code,
+element_at(map,'u19') as _displayed_rate_amount,
+element_at(map,'u20') as _displayed_rate_amounts,
+element_at(map,'u21') as _displayed_rate_discounts,
+element_at(map,'u22') as _displayed_room_sub_types,
+element_at(map,'u23') as _displayed_room_types,
+element_at(map,'u24') as _filter_amenities,
+element_at(map,'u25') as _filter_max_rate,
+element_at(map,'u26') as _filter_no_of_rooms,
+element_at(map,'u27') as _filter_room_type,
+element_at(map,'u28') as _booking_no,
+element_at(map,'u29') as _order_id,
+element_at(map,'u30') as _check_in,
+element_at(map,'u31') as _check_out,
+element_at(map,'u32') as _num_of_nights,
+element_at(map,'u33') as _num_of_rooms,
+element_at(map,'u34') as _num_of_adults,
+element_at(map,'u35') as _num_of_children,
+element_at(map,'u36') as _avg_room_rate,
+element_at(map,'u37') as _currency,
+element_at(map,'u38') as _order_promo_code,
+element_at(map,'u39') as _order_discount_amount,
+element_at(map,'u40') as _order_room_occupancy,
+element_at(map,'u41') as _order_room_type,
+element_at(map,'u42') as _order_total,
+element_at(map,'u43') as _order_total_occupancy,
+element_at(map,'u44') as _order_offer_name,
+element_at(map,'u45') as _Entertainment_ASM_Skypark_booking_transaction_ID,
+element_at(map,'u46') as _asm_exhibition_category,
+element_at(map,'u47') as _asm_exhibition_name,
+element_at(map,'u48') as _asm_avg_ticket_price,
+element_at(map,'u49') as _asm_ticket_total_price,
+element_at(map,'u50') as _restaurant_cuisine,
+element_at(map,'u51') as _restaurant_day_of_week,
+element_at(map,'u52') as _restaurant_meal,
+element_at(map,'u53') as _restaurant_name,
+element_at(map,'u54') as _restaurant_number_pax,
+element_at(map,'u55') as _type_of_shows,
+element_at(map,'u56') as _capture_name_of_the_show,
+element_at(map,'u57') as _price_category_of_seating_in_theatre,
+element_at(map,'u58') as _total_price_of_tickets_purchased_in_the_booking,
+element_at(map,'u59') as _avg_price_of_each_ticket_purchased,
+element_at(map,'u60') as _store_category,
+element_at(map,'u61') as _store_collection
+
+
+	from b
