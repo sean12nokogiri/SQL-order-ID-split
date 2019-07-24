@@ -1,0 +1,46 @@
+with a as
+(
+select nike_datatransfer_activity.dated,campaign, split_part(other_data,'~', 1)as Data -- see if I can replace the %20 things with space
+from nike_datatransfer_activity
+join nike_datatransfer_campaigns on nike_datatransfer_campaigns.campaign_id=nike_datatransfer_activity.campaign_id 
+where (other_data like '%u3=confirm%' or other_data like '%u3=saleconf%' or other_data like '%u3=globalstore_checkout_success%')
+and nike_datatransfer_activity.dated between  '2019-06-01' and '2019-06-30'--change date here. some dates DO have a discrepancy with datorama. usually within 10 conversions though.
+-- and other_data like '%u1=fr%' change this bit for making it country specific
+and campaign like '%Display%'
+),--this bit selects the nesessary data. so this would be the u variable and campaign of purchasers 
+
+b as
+(select split_to_map(Data,';','=') map, campaign, a.dated
+from a 
+group by 1,2,3), --something about using the delimitors, and printing them to the arrays
+
+c as (
+select b.dated,campaign,
+    element_at(map, 'u1') as country,
+    element_at(map, 'u2') as language,
+    element_at(map, 'u3') as page_type,
+	element_at(map, 'u4') as pageID,
+	element_at(map, 'u5') as number_of_products_sold,
+	element_at(map, 'u6') as product_ID,
+	element_at(map, 'u7') as event_Id,
+	element_at(map, 'u8') as city,
+	element_at(map, 'u9') as video_ID,
+	element_at(map, 'u10') as product_name,
+	element_at(map, 'u11') as category,
+	element_at(map, 'u12') as quantity,
+	element_at(map, 'u13') as price,
+	element_at(map, 'u14') as currency,
+	element_at(map, 'u15') as size_of_product,
+	element_at(map, 'u16') as visitor_ID,
+	element_at(map, 'u17') as URL,
+	element_at(map, 'u18') as u18,
+	element_at(map, 'u19') as u19,
+	element_at(map, 'u20') as u20,
+	element_at(map, 'u21') as u21
+	from b ) --I think this bit sees the variable before each text, and connects each first bit text to the corresponding variable...?
+
+
+SELECT * --c.product_ID, c.campaign, c.country, u.product_name, u.price, c.currency , u.price -- add price to this split. handy for QBR
+FROM c, UNNEST(split(product_ID, '|'),split(category, '|'),split(quantity, '|'),split(price, '|'),split(size_of_product, '|'), split(product_name, '|')) u(product_ID,category,quantity,price,size_of_product,product_name)
+--group by 1,2, 3, 4, 5,6
+--and other_data like '%u14%'
